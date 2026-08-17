@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seguimiento de Compromisos</title>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1e429f;
+      --success: #0e9f6e;
+      --warning: #c27803;
+      --danger: #e02424;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e429f, #1a56db);
+      color: white;
+      padding: 24px 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header h1 { font-size: 1.6rem; font-weight: 700; }
+    header p { font-size: 0.9rem; opacity: 0.8; margin-top: 4px; }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      padding: 20px 32px;
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 20px;
+      border-radius: 10px;
+      min-width: 100px;
+    }
+
+    .stat.total { background: #eff6ff; color: var(--primary-dark); }
+    .stat.pendiente { background: #fef3c7; color: var(--warning); }
+    .stat.completado { background: #d1fae5; color: var(--success); }
+    .stat.vencido { background: #fee2e2; color: var(--danger); }
+
+    .stat-num { font-size: 1.8rem; font-weight: 800; }
+    .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+
+    .controls {
+      padding: 16px 32px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--gray-100);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    input[type="search"], select {
+      padding: 8px 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="search"] { flex: 1; min-width: 220px; }
+    input[type="search"]:focus, select:focus { border-color: var(--primary); }
+
+    .update-info {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--gray-600);
+    }
+
+    .table-wrap {
+      padding: 24px 32px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    thead th {
+      background: var(--primary);
+      color: white;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--gray-100); transition: background 0.15s; }
+    tbody tr:hover { background: #eff6ff; }
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      vertical-align: top;
+    }
+
+    td.id { color: var(--gray-600); font-weight: 600; width: 48px; text-align: center; }
+    td.compromiso { max-width: 260px; font-weight: 500; }
+    td.responsable { color: var(--primary-dark); font-weight: 500; white-space: nowrap; }
+    td.fecha { color: var(--gray-600); white-space: nowrap; }
+    td.seguimiento { max-width: 300px; color: var(--gray-700); font-size: 0.83rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-pendiente { background: #fef3c7; color: #92400e; }
+    .badge-completado { background: #d1fae5; color: #065f46; }
+    .badge-vencido { background: #fee2e2; color: #991b1b; }
+    .badge-proceso { background: #e0e7ff; color: #3730a3; }
+
+    .no-results {
+      text-align: center;
+      padding: 48px;
+      color: var(--gray-600);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 700px) {
+      header, .stats-bar, .controls, .table-wrap { padding: 16px; }
+      .stat-num { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Seguimiento de Compromisos</h1>
+  <p id="header-date">Cargando datos...</p>
+</header>
+
+<div class="stats-bar">
+  <div class="stat total">
+    <span class="stat-num" id="stat-total">–</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat pendiente">
+    <span class="stat-num" id="stat-pendiente">–</span>
+    <span class="stat-label">Pendientes</span>
+  </div>
+  <div class="stat completado">
+    <span class="stat-num" id="stat-completado">–</span>
+    <span class="stat-label">Completados</span>
+  </div>
+  <div class="stat vencido">
+    <span class="stat-num" id="stat-sin-seguimiento">–</span>
+    <span class="stat-label">Sin seguimiento</span>
+  </div>
+</div>
+
+<div class="controls">
+  <input type="search" id="search" placeholder="🔍  Buscar compromiso, responsable..."/>
+  <select id="filter-estado">
+    <option value="">Todos los estados</option>
+    <option value="Pendiente">Pendiente</option>
+    <option value="Completado">Completado</option>
+    <option value="En proceso">En proceso</option>
+  </select>
+  <select id="filter-responsable">
+    <option value="">Todos los responsables</option>
+  </select>
+  <span class="update-info" id="update-info"></span>
+</div>
+
+<div class="table-wrap">
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Compromiso</th>
+        <th>Responsable</th>
+        <th>Fecha compromiso</th>
+        <th>Estado</th>
+        <th>Seguimiento</th>
+        <th>Último seguimiento</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="no-results" id="no-results" style="display:none">No se encontraron compromisos con ese filtro.</div>
+</div>
+
+<script>
+let allData = [];
+
+function badgeClass(estado) {
+  if (!estado) return 'badge-pendiente';
+  const e = estado.toLowerCase();
+  if (e.includes('complet') || e.includes('cerrad')) return 'badge-completado';
+  if (e.includes('proceso') || e.includes('ejecuci')) return 'badge-proceso';
+  if (e.includes('vencid')) return 'badge-vencido';
+  return 'badge-pendiente';
+}
+
+function formatDate(d) {
+  if (!d) return '–';
+  try {
+    const [y, m, day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  } catch { return d; }
+}
+
+function render(data) {
+  const tbody = document.getElementById('tbody');
+  const noRes = document.getElementById('no-results');
+  tbody.innerHTML = '';
+
+  if (data.length === 0) {
+    noRes.style.display = 'block';
+    return;
+  }
+  noRes.style.display = 'none';
+
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    const estado = row['Estado'] || 'Pendiente';
+    const seguimiento = row['Seguimiento'] || '';
+    tr.innerHTML = `
+      <td class="id">${row['ID'] || ''}</td>
+      <td class="compromiso">${row['Compromiso'] || ''}</td>
+      <td class="responsable">${row['Responsable'] || ''}</td>
+      <td class="fecha">${formatDate(row['Fecha compromiso'])}</td>
+      <td><span class="badge ${badgeClass(estado)}">${estado}</span></td>
+      <td class="seguimiento">${seguimiento || '<em style="color:#9ca3af">Sin seguimiento</em>'}</td>
+      <td class="fecha">${formatDate(row['Fecha último seguimiento'])}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilters() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const estado = document.getElementById('filter-estado').value;
+  const resp = document.getElementById('filter-responsable').value;
+
+  const filtered = allData.filter(row => {
+    const text = `${row['Compromiso']} ${row['Responsable']} ${row['Seguimiento']}`.toLowerCase();
+    const matchQ = !q || text.includes(q);
+    const matchE = !estado || (row['Estado'] || '').includes(estado);
+    const matchR = !resp || (row['Responsable'] || '').includes(resp);
+    return matchQ && matchE && matchR;
+  });
+
+  render(filtered);
+}
+
+async function loadData() {
+  const res = await fetch('compromisos.json?t=' + Date.now());
+  allData = await res.json();
+
+  // Stats
+  document.getElementById('stat-total').textContent = allData.length;
+  document.getElementById('stat-pendiente').textContent =
+    allData.filter(r => (r['Estado'] || '').toLowerCase().includes('pendiente')).length;
+  document.getElementById('stat-completado').textContent =
+    allData.filter(r => (r['Estado'] || '').toLowerCase().includes('complet')).length;
+  document.getElementById('stat-sin-seguimiento').textContent =
+    allData.filter(r => !r['Seguimiento']).length;
+
+  // Responsables filter
+  const responsables = [...new Set(allData.map(r => r['Responsable']).filter(Boolean))].sort();
+  const sel = document.getElementById('filter-responsable');
+  responsables.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r;
+    opt.textContent = r;
+    sel.appendChild(opt);
+  });
+
+  // Date
+  const lastUpdate = allData.reduce((max, r) => {
+    const d = r['Fecha último seguimiento'];
+    return d > max ? d : max;
+  }, '');
+  document.getElementById('header-date').textContent =
+    `Último seguimiento registrado: ${formatDate(lastUpdate)}`;
+  document.getElementById('update-info').textContent =
+    `Datos actualizados al: ${formatDate(lastUpdate)}`;
+
+  render(allData);
+}
+
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('filter-estado').addEventListener('change', applyFilters);
+document.getElementById('filter-responsable').addEventListener('change', applyFilters);
+
+loadData();
+</script>
+</body>
+</html>
