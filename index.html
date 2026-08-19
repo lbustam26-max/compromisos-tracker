@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seguimientos DESur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark:    #404E57;
+      --mid:     #758393;
+      --green:   #86BE48;
+      --green-light: #f0f8e6;
+      --bg:      #F5F6F8;
+      --white:   #FFFFFF;
+      --border:  #E2E6EA;
+      --text:    #2C3A42;
+      --muted:   #8A9BAA;
+      --shadow:  0 2px 12px rgba(64,78,87,0.09);
+      --shadow-hover: 0 6px 24px rgba(64,78,87,0.15);
+      --radius:  14px;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--dark);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-dot {
+      width: 10px; height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(134,190,72,0.25);
+    }
+
+    .logo h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-sub {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      margin-top: 2px;
+    }
+
+    .header-date {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-align: right;
+    }
+
+    /* ── KPI CARDS ── */
+    .kpi-section {
+      padding: 32px 40px 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .kpi {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .kpi:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+
+    .kpi.total::before    { background: var(--dark); }
+    .kpi.pendiente::before { background: #E8A020; }
+    .kpi.completado::before { background: var(--green); }
+    .kpi.sin-seg::before  { background: #D04A4A; }
+
+    .kpi-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .kpi-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--dark);
+    }
+
+    .kpi.total    .kpi-value { color: var(--dark); }
+    .kpi.pendiente .kpi-value { color: #E8A020; }
+    .kpi.completado .kpi-value { color: var(--green); }
+    .kpi.sin-seg  .kpi-value { color: #D04A4A; }
+
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      margin: 28px 40px 0;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    input[type="search"], select {
+      font-family: 'Montserrat', sans-serif;
+      padding: 10px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      background: var(--white);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+    }
+
+    input[type="search"] {
+      width: 100%;
+      padding-left: 38px;
+    }
+
+    input[type="search"]:focus, select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(134,190,72,0.15);
+    }
+
+    select { min-width: 180px; cursor: pointer; }
+
+    .count-badge {
+      margin-left: auto;
+      background: var(--dark);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 99px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    /* ── TABLE ── */
+    .table-section {
+      padding: 20px 40px 40px;
+    }
+
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      max-height: 520px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    .table-scroll thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: var(--dark);
+      color: rgba(255,255,255,0.85);
+      padding: 13px 18px;
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    thead th:first-child { border-radius: 0; width: 50px; text-align: center; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f7f9fb; }
+
+    td {
+      padding: 13px 18px;
+      font-size: 0.82rem;
+      vertical-align: top;
+      color: var(--text);
+      text-align: justify;
+    }
+
+    td.id {
+      text-align: center;
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    td.compromiso {
+      font-weight: 600;
+      max-width: 260px;
+      line-height: 1.4;
+    }
+
+    td.responsable {
+      font-weight: 600;
+      color: var(--dark);
+      white-space: nowrap;
+      font-size: 0.78rem;
+    }
+
+    td.fecha {
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    td.seguimiento {
+      max-width: 280px;
+      color: #5A6E7A;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 99px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    .badge-pendiente  { background: #FEF3DC; color: #B07C10; }
+    .badge-completado { background: var(--green-light); color: #4A7C1A; }
+    .badge-proceso    { background: #E8EEFF; color: #3040A0; }
+    .badge-vencido    { background: #FDEAEA; color: #A02020; }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty p { font-size: 0.88rem; font-weight: 500; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 500;
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.03em;
+    }
+
+    footer span { color: var(--green); font-weight: 700; }
+
+
+    /* ── TABS ── */
+    .tabs-section {
+      padding: 24px 40px 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab {
+      padding: 9px 20px;
+      border-radius: 10px 10px 0 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      border-bottom: none;
+      color: var(--muted);
+      background: transparent;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.03em;
+      transition: all 0.2s;
+      position: relative;
+      bottom: -2px;
+    }
+
+    .tab:hover {
+      color: var(--dark);
+      background: var(--bg);
+    }
+
+    .tab.active {
+      background: var(--white);
+      color: var(--dark);
+      border-color: var(--border);
+      border-bottom-color: var(--white);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--green);
+    }
+
+    @media (max-width: 900px) {
+      .tabs-section { padding: 16px 20px 0; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .kpi-section { grid-template-columns: repeat(2, 1fr); padding: 20px 20px 0; }
+      header, .controls, .table-section { padding-left: 20px; padding-right: 20px; }
+      .controls { margin: 20px 20px 0; }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-section { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .logo h1 { font-size: 0.85rem; }
+      td { padding: 10px 12px; }
+      thead th { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="48" height="40" viewBox="0 0 48 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 4C13 4 4 13 4 24C4 35 13 44 24 44" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+      <path d="M24 9C15.7 9 9 15.7 9 24C9 32.3 15.7 39 24 39" stroke="#b0bec5" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+      <path d="M24 14C18.5 14 14 18.5 14 24C14 29.5 18.5 34 24 34" stroke="#78909c" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+      <path d="M24 19C21.2 19 19 21.2 19 24C19 26.8 21.2 29 24 29" stroke="#546e7a" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+    </svg>
+    <div>
+      <h1>Seguimientos DESur</h1>
+      <p class="header-sub" id="header-meta">Cargando...</p>
+    </div>
+  </div>
+  <span class="header-date" id="header-date"></span>
+</header>
+
+<div class="kpi-section">
+  <div class="kpi total">
+    <span class="kpi-label">Total</span>
+    <span class="kpi-value" id="stat-total">–</span>
+    <span class="kpi-sub">compromisos registrados</span>
+  </div>
+  <div class="kpi pendiente">
+    <span class="kpi-label">Pendientes</span>
+    <span class="kpi-value" id="stat-pendiente">–</span>
+    <span class="kpi-sub">en seguimiento activo</span>
+  </div>
+  <div class="kpi completado">
+    <span class="kpi-label">Completados</span>
+    <span class="kpi-value" id="stat-completado">–</span>
+    <span class="kpi-sub">cerrados exitosamente</span>
+  </div>
+  <div class="kpi sin-seg">
+    <span class="kpi-label">Sin seguimiento</span>
+    <span class="kpi-value" id="stat-sin-seg">–</span>
+    <span class="kpi-sub">requieren atención</span>
+  </div>
+</div>
+
+<div class="tabs-section">
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="search" placeholder="Buscar por compromiso, responsable o seguimiento..."/>
+  </div>
+  <select id="filter-estado">
+    <option value="">Todos los estados</option>
+    <option value="Pendiente">Pendiente</option>
+    <option value="Completado">Completado</option>
+    <option value="En proceso">En proceso</option>
+  </select>
+  <select id="filter-responsable">
+    <option value="">Todos los responsables</option>
+  </select>
+  <span class="count-badge" id="count-badge">0 resultados</span>
+</div>
+
+<div class="table-section">
+  <div class="table-wrap">
+    <div class="table-scroll">
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Proyecto</th>
+          <th>Compromiso</th>
+          <th>Responsable</th>
+          <th>Fecha compromiso</th>
+          <th>Estado</th>
+          <th>Seguimiento</th>
+          <th>Último seguimiento</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    </div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty-icon">📋</div>
+      <p>No se encontraron compromisos con ese filtro.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Dashboard de seguimientos DESur &nbsp;·&nbsp; Actualizado al <span id="footer-date">–</span>
+</footer>
+
+<script>
+let allData = [];
+let activeTab = 'Todos';
+
+function badgeClass(estado) {
+  if (!estado) return 'badge-pendiente';
+  const e = estado.toLowerCase();
+  if (e.includes('complet') || e.includes('cerrad')) return 'badge-completado';
+  if (e.includes('proceso') || e.includes('ejecuci')) return 'badge-proceso';
+  if (e.includes('vencid')) return 'badge-vencido';
+  return 'badge-pendiente';
+}
+
+function fmt(d) {
+  if (!d || d === 'NaT' || d === '') return '–';
+  try {
+    const parts = d.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  } catch(e) {}
+  return d;
+}
+
+function render(data) {
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  const badge = document.getElementById('count-badge');
+  tbody.innerHTML = '';
+
+  badge.textContent = `${data.length} resultado${data.length !== 1 ? 's' : ''}`;
+
+  if (data.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    const estado = row['Estado'] || 'Pendiente';
+    const seg = row['Seguimiento'] || '';
+    tr.innerHTML = `
+      <td class="id">${row['ID'] || ''}</td>
+      <td class="responsable" style="font-size:0.75rem">${row['Proyecto'] || ''}</td>
+      <td class="compromiso">${row['Compromiso'] || ''}</td>
+      <td class="responsable">${row['Responsable'] || ''}</td>
+      <td class="fecha">${fmt(row['Fecha compromiso'])}</td>
+      <td><span class="badge ${badgeClass(estado)}">${estado}</span></td>
+      <td class="seguimiento">${seg || '<em style="color:#b0bec5">Sin seguimiento registrado</em>'}</td>
+      <td class="fecha">${fmt(row['Fecha último seguimiento'])}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filter() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const est = document.getElementById('filter-estado').value;
+  const resp = document.getElementById('filter-responsable').value;
+
+  const result = allData.filter(r => {
+    const txt = `${r['Compromiso']} ${r['Responsable']} ${r['Seguimiento']}`.toLowerCase();
+    const matchTab = activeTab === 'Todos' || (r['Proyecto'] || '') === activeTab;
+    return matchTab
+        && (!q || txt.includes(q))
+        && (!est  || (r['Estado'] || '').includes(est))
+        && (!resp || (r['Responsable'] || '').includes(resp));
+  });
+  render(result);
+}
+
+function setTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  filter();
+}
+
+async function init() {
+  try {
+    const SHEET_ID = '1vUlA8qx7Z41KSD_-ZT5KYzMy9QAy99hBsRtllHmS_i0';
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols.map(c => c.label);
+    allData = json.table.rows
+      .filter(row => row && row.c && row.c.some(cell => cell && cell.v))
+      .map(row => {
+        const obj = {};
+        row.c.forEach((cell, i) => {
+          let val = (cell && cell.v !== null && cell.v !== undefined) ? cell.v : '';
+          if (typeof val === 'string' && val.startsWith('Date(')) {
+            const parts = val.replace('Date(','').replace(')','').split(',');
+            const y = parts[0], m = String(parseInt(parts[1])+1).padStart(2,'0'), d = String(parts[2]).padStart(2,'0');
+            val = `${y}-${m}-${d}`;
+          }
+          obj[cols[i]] = val;
+        });
+        return obj;
+      });
+
+    document.getElementById('stat-total').textContent = allData.length;
+    document.getElementById('stat-pendiente').textContent =
+      allData.filter(r => (r['Estado']||'').toLowerCase().includes('pendiente')).length;
+    document.getElementById('stat-completado').textContent =
+      allData.filter(r => (r['Estado']||'').toLowerCase().includes('complet')).length;
+    document.getElementById('stat-sin-seg').textContent =
+      allData.filter(r => !r['Seguimiento'] || r['Seguimiento'] === '').length;
+
+    const lastDate = allData.reduce((max, r) => {
+      const d = r['Fecha último seguimiento'] || '';
+      return d > max ? d : max;
+    }, '');
+    document.getElementById('header-meta').textContent = 'Última actualización: ' + fmt(lastDate);
+    document.getElementById('header-date').textContent = fmt(lastDate);
+    document.getElementById('footer-date').textContent = fmt(lastDate);
+
+    const responsables = [...new Set(allData.map(r => r['Responsable']).filter(Boolean))].sort();
+    const sel = document.getElementById('filter-responsable');
+    responsables.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r; o.textContent = r;
+      sel.appendChild(o);
+    });
+
+    // Build tabs
+    const proyectos = ['Todos', ...new Set(allData.map(r => r['Proyecto']).filter(Boolean))];
+    const tabsEl = document.getElementById('tabs');
+    tabsEl.innerHTML = '';
+    proyectos.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (p === 'Todos' ? ' active' : '');
+      btn.dataset.tab = p;
+      const count = p === 'Todos' ? allData.length : allData.filter(r => r['Proyecto'] === p).length;
+      btn.textContent = `${p} (${count})`;
+      btn.onclick = () => setTab(p);
+      tabsEl.appendChild(btn);
+    });
+
+    render(allData);
+  } catch(e) {
+    document.getElementById('header-meta').textContent = 'Error al cargar datos';
+    console.error(e);
+  }
+}
+
+document.getElementById('search').addEventListener('input', filter);
+document.getElementById('filter-estado').addEventListener('change', filter);
+document.getElementById('filter-responsable').addEventListener('change', filter);
+
+init();
+</script>
+</body>
+</html>
